@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+if ! [ -r /sys/kernel/debug/regmap/mdio-bus:1d/registers ]; then
+	echo "Requires kernel with CONFIG_DEBUG_FS" >&2
+	exit 1
+fi
+
+if [ "$#" = 1 ]; then
+        dd if=/sys/kernel/debug/regmap/mdio-bus:1d/registers bs=11 count=1 skip=$(($1)) 2>/dev/null
+elif [ "$#" == 2 ]; then
+	if ! [ -w /sys/kernel/debug/regmap/mdio-bus:1d/registers ]; then
+		echo "Requires kernel patched with" >&2
+		cat <<EOF
+--- linux-5.15.85/drivers/base/regmap/regmap-debugfs.c.old	2023-01-08 18:55:09.646988492 -0300
++++ linux-5.15.85/drivers/base/regmap/regmap-debugfs.c	2023-01-08 18:55:19.958937456 -0300
+@@ -290,7 +290,7 @@
+ 				   count, ppos);
+ }
+ 
+-#undef REGMAP_ALLOW_WRITE_DEBUGFS
++#define REGMAP_ALLOW_WRITE_DEBUGFS 1
+ #ifdef REGMAP_ALLOW_WRITE_DEBUGFS
+ /*
+  * This can be dangerous especially when we have clients such as
+EOF
+		exit 1
+	fi
+
+	printf '%04x %04x' "$(($1))" "$(($2))" > /sys/kernel/debug/regmap/mdio-bus:1d/registers
+fi
+

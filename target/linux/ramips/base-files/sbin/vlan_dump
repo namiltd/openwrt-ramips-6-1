@@ -1,0 +1,138 @@
+#!/bin/sh
+#
+#
+
+echo -n "Enabled ports: "
+ports=$(hexdump -e '4/1 "%02x" "\n"' /sys/class/net/*/of_node/../port@*/reg | sort -u | awk '{ A="0x" $0; print A+0 }')
+for p in $ports; do
+	echo -n "p$p "
+done
+echo 
+echo
+
+RTL8365MB_VLAN_INGRESS_REG=$((0x07A9))
+echo -n VLAN Filtering enable:
+val=$(reg $RTL8365MB_VLAN_INGRESS_REG)
+val=$((0x${val#*: }))
+for p in $ports; do
+	if [ "$(($val & (1<<$p)))" -gt 0 ]; then
+		echo -n "p$p "
+	fi
+done
+echo
+echo
+
+RTL8365MB_TABLE_CONTROL_REG=$((0x0500))
+RTL8365MB_TABLE_ACCESS_ADDR_REG=$((0x0501))
+RTL8365MB_TABLE_READ_DATA_REG_BASE=$((0x0520))
+RTL8365MB_TABLE_VLAN4k=3
+RTL8365MB_TABLE_VLAN4k_SIZE=3
+RTL8365MB_TABLE_L2=4
+RTL8365MB_TABLE_L2_SIZE=6
+
+tbl_read(){
+	local t=$1
+	local i=$2
+	local n=$3
+	local r
+	local val
+	reg $RTL8365MB_TABLE_ACCESS_ADDR_REG $i
+	reg $RTL8365MB_TABLE_CONTROL_REG $t
+	for r in $(seq 0 $((n-1))); do
+		val=$(reg $((RTL8365MB_TABLE_READ_DATA_REG_BASE + $r)))
+		val=${val#*: }
+		printf "%s " $val
+	done
+	echo
+} 
+
+echo LUT:
+for i in $(seq 0 100); do
+	tbl_read $RTL8365MB_TABLE_L2 $i $RTL8365MB_TABLE_L2_SIZE
+done
+echo
+exit
+
+echo VLAN4k:
+. /usr/share/libubox/jshn.sh
+json_init
+json_load "$(bridge -j vlan | jsonfilter -e '@[@.ifname="br-lan"]')"
+for vlan in $(json_for_each_item 'printf "%s\t%s\n"' vlans | cut -f2); do
+	vals=$(tbl_read $RTL8365MB_TABLE_VLAN4k $vlan 3)
+	echo "VLAN $vlan: $vals"
+	val=$((0x${vals%% *}))
+	val=$((val & 0xff))
+	echo -n " Tagged Member: "
+	for p in $ports; do
+		if [ "$(($val & (1<<$p)))" -gt 0 ]; then
+			echo -n "p$p "
+		fi
+	done
+	echo
+	val=$((0x${vals%% *}))
+	val=$(((val >> 8) & 0xff))
+	echo -n " Untagged Member: "
+	for p in $ports; do
+		if [ "$(($val & (1<<$p)))" -gt 0 ]; then
+			echo -n "p$p "
+		fi
+	done
+	echo
+done
+echo
+
+echo VLAN MC:
+RTL8367C_VLAN_MC_CONF_BASE=$((0x0728))
+for i in $(seq 0 31); do
+	for n in $(seq 3 -1 0); do
+		val=$(reg $((RTL8367C_VLAN_MC_CONF_BASE + 4*i + n)))
+		val=$((0x${val#*: }))
+		case $n in
+			3)
+				if [ $val -eq 0 ]; then
+				       break;
+				fi
+				vid=$val
+				echo $i: VID $vid
+			;;
+			0)
+				echo -n "$i: Members: "
+				for p in $ports; do
+					if [ "$(($val & (1<<$p)))" -gt 0 ]; then
+						echo -n "p$p "
+					fi
+				done
+				echo
+		esac
+	done
+done
+echo
+
+echo VLAN PVID:
+RTL8365MB_VLAN_PVID_CTRL_BASE=$((0x0700))
+for p in $ports; do
+	val=$(reg $((RTL8365MB_VLAN_PVID_CTRL_BASE + p/2)))
+	val=$((0x${val#*: }))
+	val=$(((val >> ((p & 0x1)*8))& 0xff))
+	echo $p: idx $val
+done
+echo
+
+echo VLAN ACCEPT FRAMES:
+RTL8365MB_VLAN_ACCEPT_FRAME_TYPE_BASE=$((0x07aa))
+for p in $ports; do
+	addr=$((RTL8365MB_VLAN_ACCEPT_FRAME_TYPE_BASE + p/8))
+	val=$(reg $addr)
+	val=$((0x${val#*: }))
+	val=$(((val >> ((p & 0x7)*2))& 0x3))
+	case $val in
+		0) val="any";;
+		1) val="tag";;
+		2) val="untag";;
+	esac
+	echo $p: frameacpt $val
+	(reg 0; reg 0; reg 0; reg 0; reg 0; ) >/dev/null
+done
+
+
+

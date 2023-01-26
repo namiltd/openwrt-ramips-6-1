@@ -1,0 +1,11 @@
+--- linux-5.15.85/drivers/base/regmap/regmap-debugfs.c.old	2023-01-08 18:55:09.646988492 -0300
++++ linux-5.15.85/drivers/base/regmap/regmap-debugfs.c	2023-01-08 18:55:19.958937456 -0300
+@@ -290,7 +290,7 @@
+ 				   count, ppos);
+ }
+ 
+-#undef REGMAP_ALLOW_WRITE_DEBUGFS
++#define REGMAP_ALLOW_WRITE_DEBUGFS 1
+ #ifdef REGMAP_ALLOW_WRITE_DEBUGFS
+ /*
+  * This can be dangerous especially when we have clients such as

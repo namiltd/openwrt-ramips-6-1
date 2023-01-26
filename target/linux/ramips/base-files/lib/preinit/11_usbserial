@@ -1,0 +1,20 @@
+
+config_usbserial() {
+	local consoles="$(sed -e 's/ /\n/g' /proc/cmdline | grep '^console=' | sed -e 's/^console=//' -e 's/,.*//')"
+	[ -n "$consoles" ] || consoles=console
+	for console in $consoles; do
+		if [ -c "/dev/$console" ] && [ "$console" == ttyUSB0 ]; then
+			echo ttyUSB0 is already the running console > /dev/console
+			return 0
+		fi
+	done
+
+	modprobe ch341
+	mknod /dev/ttyUSB0 c 188 0
+	dmesg > /dev/ttyUSB0
+	echo "Try to redirect console to ttyUSB0. Expect a confirmation right bellow." > /dev/ttyUSB0
+	setconsole /dev/ttyUSB0
+	echo "If you are reading this in the ttyUSB0, it worked." > /dev/console
+}
+
+boot_hook_add preinit_main config_usbserial

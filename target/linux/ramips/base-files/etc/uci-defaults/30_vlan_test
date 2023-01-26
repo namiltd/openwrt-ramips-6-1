@@ -1,0 +1,45 @@
+# /etc/config/dhcp
+
+echo 'module rtl8365mb +p' > /sys/kernel/debug/dynamic_debug/control
+dmesg -n 8
+
+exit
+
+uci del dhcp.lan.ra_slaac
+
+uci add network bridge-vlan # =cfg09a1b0
+uci set network.@bridge-vlan[-1].device='br-lan'
+uci set network.@bridge-vlan[-1].vlan='1'
+uci add_list network.@bridge-vlan[-1].ports='lan1:u*'
+uci add_list network.@bridge-vlan[-1].ports='lan2:u*'
+uci add_list network.@bridge-vlan[-1].ports='lan3:u*'
+uci add_list network.@bridge-vlan[-1].ports='lan4:u*'
+
+uci set network.cfg030f15.vlan_filtering='0'
+
+uci set network.lan.device='br-lan.1'
+# /etc/config/firewall
+uci del firewall.cfg02dc81.network
+uci add_list firewall.cfg02dc81.network='lan'
+uci add_list firewall.cfg02dc81.network='lan2'
+uci add_list firewall.cfg02dc81.network='lan3'
+uci add_list firewall.cfg02dc81.network='lan4'
+
+for vlan in $(seq 2 ${vlan_max:-30}); do
+	# /etc/config/network
+	uci add network bridge-vlan # =cfg09a1b0
+	uci set network.@bridge-vlan[-1].device='br-lan'
+	uci set network.@bridge-vlan[-1].vlan="$vlan"
+	uci add_list network.@bridge-vlan[-1].ports='lan1:t'
+	uci add_list network.@bridge-vlan[-1].ports='lan2:t'
+	uci add_list network.@bridge-vlan[-1].ports='lan3:t'
+	uci add_list network.@bridge-vlan[-1].ports='lan4:t'
+
+	uci set network.lan$vlan=interface
+	uci set network.lan$vlan.proto='static'
+	uci set network.lan$vlan.device="br-lan.$vlan"
+	uci set network.lan$vlan.ipaddr="192.168.$vlan.1"
+	uci set network.lan$vlan.netmask='255.255.255.0'
+
+done
+

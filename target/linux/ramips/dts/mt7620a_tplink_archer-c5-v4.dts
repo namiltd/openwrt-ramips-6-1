@@ -8,6 +8,10 @@
 	compatible = "tplink,archer-c5-v4", "ralink,mt7620a-soc";
 	model = "TP-Link Archer C5 v4";
 
+	chosen {
+		bootargs = "console=ttyUSB0,9600";
+	};
+
 	aliases {
 		led-boot = &led_power;
 		led-failsafe = &led_power;
