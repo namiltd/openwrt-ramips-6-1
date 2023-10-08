@@ -390,6 +390,39 @@ endef
 
 $(eval $(call KernelPackage,phy-aquantia))
 
+define KernelPackage/dsa
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Distributed Switch Architecture support
+  DEPENDS:=+kmod-mdio-devres +kmod-net-selftests +kmod-phylink
+  KCONFIG:=CONFIG_NET_DSA
+  FILES:=$(LINUX_DIR)/net/dsa/dsa_core.ko
+endef
+
+define KernelPackage/dsa/description
+  Kernel module support for Distributed Switch Architecture
+endef
+
+$(eval $(call KernelPackage,dsa))
+
+define KernelPackage/dsa-qca8k
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Qualcomm Atheros QCA8xxx switch family DSA support
+  DEPENDS:=+kmod-dsa +kmod-regmap-core
+  KCONFIG:= \
+	CONFIG_NET_DSA_QCA8K \
+	CONFIG_NET_DSA_QCA8K_LEDS_SUPPORT=y@ge6.1 \
+	CONFIG_NET_DSA_TAG_QCA
+  FILES:= \
+	$(LINUX_DIR)/drivers/net/dsa/qca/qca8k.ko \
+	$(LINUX_DIR)/net/dsa/tag_qca.ko
+  AUTOLOAD:=$(call AutoLoad,42,qca8k,1)
+endef
+
+define KernelPackage/dsa-qca8k/description
+  DSA based kernel modules for the Qualcomm Atheros QCA8xxx switch family
+endef
+
+$(eval $(call KernelPackage,dsa-qca8k))
 
 define KernelPackage/swconfig
   SUBMENU:=$(NETWORK_DEVICES_MENU)
