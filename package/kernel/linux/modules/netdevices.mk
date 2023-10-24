@@ -424,6 +424,89 @@ endef
 
 $(eval $(call KernelPackage,dsa-qca8k))
 
+
+define KernelPackage/dsa-realtek
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Realtek common module RTL83xx DSA switch family
+  DEPENDS:=@LINUX_6_1 +kmod-dsa +kmod-phy-realtek +kmod-regmap-core
+  KCONFIG:= \
+	CONFIG_NET_DSA_REALTEK \
+	CONFIG_NET_DSA_REALTEK_MDIO=y \
+	CONFIG_NET_DSA_REALTEK_SMI=y
+  FILES:= $(LINUX_DIR)/drivers/net/dsa/realtek/realtek-dsa.ko
+endef
+
+define KernelPackage/dsa-realtek/description
+  Common kernel module for Realtek RTL83xx DSA switch family
+endef
+
+$(eval $(call KernelPackage,dsa-realtek))
+
+
+define KernelPackage/dsa-tag_rtl4_a
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Realtek DSA tag rtl4_a for RTL83xx switch family
+  DEPENDS:=@LINUX_6_1 +kmod-dsa
+  KCONFIG:=CONFIG_NET_DSA_TAG_RTL4_A
+  FILES:= $(LINUX_DIR)/net/dsa/tag_rtl4_a.ko
+  AUTOLOAD:=$(call AutoLoad,41,tag_rtl4_a,1)
+endef
+
+define KernelPackage/dsa-realtek-tag_rtl4_a/description
+  DSA tag rtl4_a for Realtek Switches
+endef
+
+$(eval $(call KernelPackage,dsa-tag_rtl4_a))
+
+
+define KernelPackage/dsa-rtl8366rb
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Realtek RTL8365MB switch DSA support
+  DEPENDS:=+kmod-dsa-realtek +kmod-dsa-tag_rtl4_a @LINUX_6_1
+  KCONFIG:=CONFIG_NET_DSA_REALTEK_RTL8366RB
+  FILES:= $(LINUX_DIR)/drivers/net/dsa/realtek/rtl8366.ko
+  AUTOLOAD:=$(call AutoLoad,42,rtl8366,1)
+endef
+
+define KernelPackage/dsa-rtl8366rb/description
+  DSA based kernel modules for the Realtek RTL8366RB switch family
+endef
+
+$(eval $(call KernelPackage,dsa-rtl8366rb))
+
+
+define KernelPackage/dsa-tag_rtl8_4
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Realtek DSA tag rtl8_4 for RTL83xx switch family
+  DEPENDS:=@LINUX_6_1 +kmod-dsa
+  KCONFIG:=CONFIG_NET_DSA_TAG_RTL4_A
+  FILES:= $(LINUX_DIR)/net/dsa/tag_rtl8_4.ko
+  AUTOLOAD:=$(call AutoLoad,41,tag_rtl8_4,1)
+endef
+
+define KernelPackage/dsa-realtek-tag_rtl8_4/description
+  DSA tag rtl8_4 for Realtek Switches
+endef
+
+$(eval $(call KernelPackage,dsa-tag_rtl8_4))
+
+
+define KernelPackage/dsa-rtl8365mb
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Realtek RTL8365MB switch DSA support
+  DEPENDS:=+kmod-dsa-realtek +kmod-dsa-tag_rtl8_4 @LINUX_6_1
+  KCONFIG:= CONFIG_NET_DSA_REALTEK_RTL8365MB
+  FILES:=$(LINUX_DIR)/drivers/net/dsa/realtek/rtl8365mb.ko
+  AUTOLOAD:=$(call AutoLoad,42,rtl8365mb,1)
+endef
+
+define KernelPackage/dsa-rtl8365mb/description
+  DSA based kernel modules for the Realtek RTL8365MB switch family
+endef
+
+$(eval $(call KernelPackage,dsa-rtl8365mb))
+
+
 define KernelPackage/swconfig
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=switch configuration API

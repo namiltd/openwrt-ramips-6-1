@@ -1,0 +1,263 @@
+From f44a90104ee5aceaf39b5a10787ab34c46c987ba Mon Sep 17 00:00:00 2001
+From: Rob Herring <robh@kernel.org>
+Date: Mon, 24 Jul 2023 15:18:58 -0600
+Subject: [PATCH] net: dsa: Explicitly include correct DT includes
+
+The DT of_device.h and of_platform.h date back to the separate
+of_platform_bus_type before it as merged into the regular platform bus.
+As part of that merge prepping Arm DT support 13 years ago, they
+"temporarily" include each other. They also include platform_device.h
+and of.h. As a result, there's a pretty much random mix of those include
+files used throughout the tree. In order to detangle these headers and
+replace the implicit includes with struct declarations, users need to
+explicitly include the correct includes.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Simon Horman <simon.horman@corigine.com>
+Reviewed-by: Vladimir Oltean <olteanv@gmail.com>
+Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Link: https://lore.kernel.org/r/20230724211859.805481-1-robh@kernel.org
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Luiz Angelo Daros de Luca <luizluca@gmail.com>
+---
+ drivers/net/dsa/b53/b53_mdio.c             | 1 +
+ drivers/net/dsa/b53/b53_mmap.c             | 1 +
+ drivers/net/dsa/hirschmann/hellcreek.c     | 1 -
+ drivers/net/dsa/hirschmann/hellcreek_ptp.c | 1 +
+ drivers/net/dsa/lan9303-core.c             | 1 +
+ drivers/net/dsa/microchip/ksz8863_smi.c    | 3 +++
+ drivers/net/dsa/microchip/ksz_common.c     | 2 +-
+ drivers/net/dsa/mt7530-mmio.c              | 3 ++-
+ drivers/net/dsa/mv88e6xxx/chip.c           | 2 +-
+ drivers/net/dsa/ocelot/felix_vsc9959.c     | 1 +
+ drivers/net/dsa/ocelot/seville_vsc9953.c   | 3 ++-
+ drivers/net/dsa/qca/qca8k-leds.c           | 1 +
+ drivers/net/dsa/realtek/realtek-mdio.c     | 2 +-
+ drivers/net/dsa/realtek/realtek-smi.c      | 1 -
+ drivers/net/dsa/sja1105/sja1105_main.c     | 1 -
+ drivers/net/dsa/vitesse-vsc73xx-core.c     | 1 -
+ drivers/net/dsa/xrs700x/xrs700x.c          | 2 +-
+ 17 files changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/dsa/b53/b53_mdio.c b/drivers/net/dsa/b53/b53_mdio.c
+index 8b422b298cd5..4d55d8d18376 100644
+--- a/drivers/net/dsa/b53/b53_mdio.c
++++ b/drivers/net/dsa/b53/b53_mdio.c
+@@ -19,6 +19,7 @@
+ #include <linux/kernel.h>
+ #include <linux/phy.h>
+ #include <linux/module.h>
++#include <linux/of.h>
+ #include <linux/delay.h>
+ #include <linux/brcmphy.h>
+ #include <linux/rtnetlink.h>
+diff --git a/drivers/net/dsa/b53/b53_mmap.c b/drivers/net/dsa/b53/b53_mmap.c
+index 5db1ed26f03a..5e39641ea887 100644
+--- a/drivers/net/dsa/b53/b53_mmap.c
++++ b/drivers/net/dsa/b53/b53_mmap.c
+@@ -19,6 +19,7 @@
+ #include <linux/bits.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/of.h>
+ #include <linux/io.h>
+ #include <linux/platform_device.h>
+ #include <linux/platform_data/b53.h>
+diff --git a/drivers/net/dsa/hirschmann/hellcreek.c b/drivers/net/dsa/hirschmann/hellcreek.c
+index af50001ccdd4..720f4e4ed0b0 100644
+--- a/drivers/net/dsa/hirschmann/hellcreek.c
++++ b/drivers/net/dsa/hirschmann/hellcreek.c
+@@ -11,7 +11,6 @@
+ #include <linux/module.h>
+ #include <linux/device.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
+ #include <linux/of_mdio.h>
+ #include <linux/platform_device.h>
+ #include <linux/bitops.h>
+diff --git a/drivers/net/dsa/hirschmann/hellcreek_ptp.c b/drivers/net/dsa/hirschmann/hellcreek_ptp.c
+index 3e44ccb7db84..5249a1c2a80b 100644
+--- a/drivers/net/dsa/hirschmann/hellcreek_ptp.c
++++ b/drivers/net/dsa/hirschmann/hellcreek_ptp.c
+@@ -9,6 +9,7 @@
+  *	    Kurt Kanzenbach <kurt@linutronix.de>
+  */
+ 
++#include <linux/of.h>
+ #include <linux/ptp_clock_kernel.h>
+ #include "hellcreek.h"
+ #include "hellcreek_ptp.h"
+diff --git a/drivers/net/dsa/lan9303-core.c b/drivers/net/dsa/lan9303-core.c
+index b0da1e4de63c..ee67adeb2cdb 100644
+--- a/drivers/net/dsa/lan9303-core.c
++++ b/drivers/net/dsa/lan9303-core.c
+@@ -8,6 +8,7 @@
+ #include <linux/regmap.h>
+ #include <linux/mutex.h>
+ #include <linux/mii.h>
++#include <linux/of.h>
+ #include <linux/phy.h>
+ #include <linux/if_bridge.h>
+ #include <linux/if_vlan.h>
+diff --git a/drivers/net/dsa/microchip/ksz8863_smi.c b/drivers/net/dsa/microchip/ksz8863_smi.c
+index fd6e2e69a42a..5711a59e2ac9 100644
+--- a/drivers/net/dsa/microchip/ksz8863_smi.c
++++ b/drivers/net/dsa/microchip/ksz8863_smi.c
+@@ -5,6 +5,9 @@
+  * Copyright (C) 2019 Pengutronix, Michael Grzeschik <kernel@pengutronix.de>
+  */
+ 
++#include <linux/mod_devicetable.h>
++#include <linux/property.h>
++
+ #include "ksz8.h"
+ #include "ksz_common.h"
+ 
+diff --git a/drivers/net/dsa/microchip/ksz_common.c b/drivers/net/dsa/microchip/ksz_common.c
+index 1de2251a42dc..2414c1f8bc2d 100644
+--- a/drivers/net/dsa/microchip/ksz_common.c
++++ b/drivers/net/dsa/microchip/ksz_common.c
+@@ -18,8 +18,8 @@
+ #include <linux/if_vlan.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/of.h>
+ #include <linux/of_mdio.h>
+-#include <linux/of_device.h>
+ #include <linux/of_net.h>
+ #include <linux/micrel_phy.h>
+ #include <net/dsa.h>
+diff --git a/drivers/net/dsa/mt7530-mmio.c b/drivers/net/dsa/mt7530-mmio.c
+index 1a3d4b692f34..0a6a2fe34e64 100644
+--- a/drivers/net/dsa/mt7530-mmio.c
++++ b/drivers/net/dsa/mt7530-mmio.c
+@@ -1,7 +1,8 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ 
++#include <linux/mod_devicetable.h>
+ #include <linux/module.h>
+-#include <linux/of_platform.h>
++#include <linux/platform_device.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+diff --git a/drivers/net/dsa/mv88e6xxx/chip.c b/drivers/net/dsa/mv88e6xxx/chip.c
+index 11a2e3d38484..bce9c9e43752 100644
+--- a/drivers/net/dsa/mv88e6xxx/chip.c
++++ b/drivers/net/dsa/mv88e6xxx/chip.c
+@@ -23,7 +23,7 @@
+ #include <linux/list.h>
+ #include <linux/mdio.h>
+ #include <linux/module.h>
+-#include <linux/of_device.h>
++#include <linux/of.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_mdio.h>
+ #include <linux/platform_data/mv88e6xxx.h>
+diff --git a/drivers/net/dsa/ocelot/felix_vsc9959.c b/drivers/net/dsa/ocelot/felix_vsc9959.c
+index 1c113957fcf4..dce3548dcd05 100644
+--- a/drivers/net/dsa/ocelot/felix_vsc9959.c
++++ b/drivers/net/dsa/ocelot/felix_vsc9959.c
+@@ -16,6 +16,7 @@
+ #include <net/pkt_sched.h>
+ #include <linux/iopoll.h>
+ #include <linux/mdio.h>
++#include <linux/of.h>
+ #include <linux/pci.h>
+ #include <linux/time.h>
+ #include "felix.h"
+diff --git a/drivers/net/dsa/ocelot/seville_vsc9953.c b/drivers/net/dsa/ocelot/seville_vsc9953.c
+index 15003b2af264..8f912bda120b 100644
+--- a/drivers/net/dsa/ocelot/seville_vsc9953.c
++++ b/drivers/net/dsa/ocelot/seville_vsc9953.c
+@@ -2,13 +2,14 @@
+ /* Distributed Switch Architecture VSC9953 driver
+  * Copyright (C) 2020, Maxim Kochetkov <fido_max@inbox.ru>
+  */
++#include <linux/platform_device.h>
+ #include <linux/types.h>
+ #include <soc/mscc/ocelot_vcap.h>
+ #include <soc/mscc/ocelot_sys.h>
+ #include <soc/mscc/ocelot.h>
+ #include <linux/mdio/mdio-mscc-miim.h>
++#include <linux/mod_devicetable.h>
+ #include <linux/of_mdio.h>
+-#include <linux/of_platform.h>
+ #include <linux/pcs-lynx.h>
+ #include <linux/dsa/ocelot.h>
+ #include <linux/iopoll.h>
+diff --git a/drivers/net/dsa/qca/qca8k-leds.c b/drivers/net/dsa/qca/qca8k-leds.c
+index 1261e0bb21ef..e8c16e76e34b 100644
+--- a/drivers/net/dsa/qca/qca8k-leds.c
++++ b/drivers/net/dsa/qca/qca8k-leds.c
+@@ -1,4 +1,5 @@
+ // SPDX-License-Identifier: GPL-2.0
++#include <linux/property.h>
+ #include <linux/regmap.h>
+ #include <net/dsa.h>
+ 
+diff --git a/drivers/net/dsa/realtek/realtek-mdio.c b/drivers/net/dsa/realtek/realtek-mdio.c
+index 5a8fe707ca25..4310e7793e58 100644
+--- a/drivers/net/dsa/realtek/realtek-mdio.c
++++ b/drivers/net/dsa/realtek/realtek-mdio.c
+@@ -20,7 +20,7 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/of_device.h>
++#include <linux/of.h>
+ #include <linux/overflow.h>
+ #include <linux/regmap.h>
+ 
+diff --git a/drivers/net/dsa/realtek/realtek-smi.c b/drivers/net/dsa/realtek/realtek-smi.c
+index 1b447d96b9c4..c2bd8bb6c9c2 100644
+--- a/drivers/net/dsa/realtek/realtek-smi.c
++++ b/drivers/net/dsa/realtek/realtek-smi.c
+@@ -31,7 +31,6 @@
+ #include <linux/spinlock.h>
+ #include <linux/skbuff.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
+ #include <linux/of_mdio.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+diff --git a/drivers/net/dsa/sja1105/sja1105_main.c b/drivers/net/dsa/sja1105/sja1105_main.c
+index 52dd52d6c43d..331bb1c6676a 100644
+--- a/drivers/net/dsa/sja1105/sja1105_main.c
++++ b/drivers/net/dsa/sja1105/sja1105_main.c
+@@ -15,7 +15,6 @@
+ #include <linux/of.h>
+ #include <linux/of_net.h>
+ #include <linux/of_mdio.h>
+-#include <linux/of_device.h>
+ #include <linux/pcs/pcs-xpcs.h>
+ #include <linux/netdev_features.h>
+ #include <linux/netdevice.h>
+diff --git a/drivers/net/dsa/vitesse-vsc73xx-core.c b/drivers/net/dsa/vitesse-vsc73xx-core.c
+index ef1a4a7c47b2..4f09e7438f3b 100644
+--- a/drivers/net/dsa/vitesse-vsc73xx-core.c
++++ b/drivers/net/dsa/vitesse-vsc73xx-core.c
+@@ -18,7 +18,6 @@
+ #include <linux/module.h>
+ #include <linux/device.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
+ #include <linux/of_mdio.h>
+ #include <linux/bitops.h>
+ #include <linux/if_bridge.h>
+diff --git a/drivers/net/dsa/xrs700x/xrs700x.c b/drivers/net/dsa/xrs700x/xrs700x.c
+index fa622639d640..753fef757f11 100644
+--- a/drivers/net/dsa/xrs700x/xrs700x.c
++++ b/drivers/net/dsa/xrs700x/xrs700x.c
+@@ -7,7 +7,7 @@
+ #include <net/dsa.h>
+ #include <linux/etherdevice.h>
+ #include <linux/if_bridge.h>
+-#include <linux/of_device.h>
++#include <linux/of.h>
+ #include <linux/netdev_features.h>
+ #include <linux/if_hsr.h>
+ #include "xrs700x.h"
+-- 
+2.42.0
+

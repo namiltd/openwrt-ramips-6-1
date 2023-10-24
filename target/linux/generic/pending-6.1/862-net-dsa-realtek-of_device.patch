@@ -1,0 +1,36 @@
+diff --git a/drivers/net/dsa/realtek/realtek-mdio.c b/drivers/net/dsa/realtek/realtek-mdio.c
+index 58966d0625c8..64e89f3c456b 100644
+--- a/drivers/net/dsa/realtek/realtek-mdio.c
++++ b/drivers/net/dsa/realtek/realtek-mdio.c
+@@ -21,6 +21,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/of.h>
++#include <linux/of_device.h> /* krnl 6.1 only */
+ #include <linux/overflow.h>
+ #include <linux/regmap.h>
+ 
+diff --git a/drivers/net/dsa/realtek/realtek-smi.c b/drivers/net/dsa/realtek/realtek-smi.c
+index 31ac409acfd0..96435ef3b810 100644
+--- a/drivers/net/dsa/realtek/realtek-smi.c
++++ b/drivers/net/dsa/realtek/realtek-smi.c
+@@ -31,6 +31,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/skbuff.h>
+ #include <linux/of.h>
++#include <linux/of_device.h> /* krnl 6.1 only */
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/platform_device.h>
+diff --git a/drivers/net/dsa/realtek/realtek-common.c b/drivers/net/dsa/realtek/realtek-common.c
+index 1b733ac56560..41342c586d39 100644
+--- a/drivers/net/dsa/realtek/realtek-common.c
++++ b/drivers/net/dsa/realtek/realtek-common.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0+
+ 
+ #include <linux/module.h>
++#include <linux/of_device.h> /* krnl 6.1 only */
+ #include <linux/of_mdio.h>
+ 
+ #include "realtek.h"
