@@ -69,6 +69,13 @@
 	};
 };
 
+&spi0 {
+	flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+	};
+};
+
 &gpio0 {
 	interrupt-controller;
 	#interrupt-cells = <2>;
