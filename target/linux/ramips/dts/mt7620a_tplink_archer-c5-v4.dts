@@ -26,51 +26,34 @@
 		};
 
 		led-1 {
-			function = LED_FUNCTION_WLAN;
+			function = LED_FUNCTION_WAN;
 			color = <LED_COLOR_ID_GREEN>;
-			function-enumerator = <2>;
-			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
-			linux,default-trigger = "phy1tpt";
+			gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
 		};
 
 		led-2 {
-			function = LED_FUNCTION_WLAN;
+			function = LED_FUNCTION_LAN;
 			color = <LED_COLOR_ID_GREEN>;
-			function-enumerator = <5>;
-			gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
-			linux,default-trigger = "phy0tpt";
+			gpios = <&gpio2 3 GPIO_ACTIVE_LOW>;
 		};
 
 		led-3 {
-			function = LED_FUNCTION_WAN;
+			function = LED_FUNCTION_WLAN;
 			color = <LED_COLOR_ID_GREEN>;
-			gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "phy1tpt";
 		};
+	};
 
-		led-4 {
-			function = LED_FUNCTION_WAN;
-			color = <LED_COLOR_ID_ORANGE>;
-			gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
-		};
+	/delete-node/ keys;
 
-		led-5 {
-			function = LED_FUNCTION_LAN;
-			color = <LED_COLOR_ID_GREEN>;
-			gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
-		};
+	keys {
+		compatible = "gpio-keys";
 
-		led-6 {
-			function = LED_FUNCTION_USB;
-			color = <LED_COLOR_ID_GREEN>;
-			gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
-			trigger-sources = <&ohci_port1>, <&ehci_port1>;
-			linux,default-trigger = "usbport";
-		};
-
-		led-7 {
-			function = LED_FUNCTION_WPS;
-			color = <LED_COLOR_ID_GREEN>;
-			gpios = <&gpio0 1 GPIO_ACTIVE_LOW>;
+		reset {
+			label = "reset";
+			gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_RESTART>;
 		};
 	};
 
@@ -119,11 +102,11 @@
 	pinctrl-0 = <&pa_pins>;
 	pinctrl-1 = <&pa_gpio_pins>;
 
-	nvmem-cells = <&eeprom_radio_0>, <&macaddr_rom_f100 0>;
-	nvmem-cell-names = "eeprom", "mac-address";
+	nvmem-cells = <&macaddr_rom_f100 0>;
+	nvmem-cell-names = "mac-address";
 };
 
 &wifi {
-	nvmem-cells = <&eeprom_radio_8000>, <&macaddr_rom_f100 2>;
-	nvmem-cell-names = "eeprom", "mac-address";
+	nvmem-cells = <&macaddr_rom_f100 0>;
+	nvmem-cell-names = "mac-address";
 };
