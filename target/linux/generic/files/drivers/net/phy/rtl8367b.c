@@ -1,5 +1,6 @@
 /*
- * Platform driver for the Realtek RTL8367R-VB ethernet switches
+ * Platform driver for Realtek RTL8367B family chips, i.e. RTL8367R-VB and RTL8367RB
+ * extended with support for RTL8367C family chips, i.e. RTL8367S, RTL8367RB-VB and RTL8365MB-VC
  *
  * Copyright (C) 2012 Gabor Juhos <juhosg@openwrt.org>
  *
@@ -265,6 +266,18 @@ struct rtl8367b_initval {
 
 #define RTL8367B_MIB_RXB_ID		0	/* IfInOctets */
 #define RTL8367B_MIB_TXB_ID		28	/* IfOutOctets */
+
+#define RTL8365MB_PHY_ADDR_MAX	7
+
+#define CHIP_FAMILY_RTL8367B	0
+#define CHIP_FAMILY_RTL8367C	1
+
+#define CHIP_RTL8367R_VB		(CHIP_RTL8367B_FAMILY << 4) + 0;
+#define CHIP_RTL8367RB			(CHIP_RTL8367B_FAMILY << 4) + 1;
+
+#define CHIP_RTL8367S			(CHIP_RTL8367C_FAMILY << 4) + 0;
+#define CHIP_RTL8367RB_VB		(CHIP_RTL8367C_FAMILY << 4) + 1;
+#define CHIP_RTL8365MB_VC		(CHIP_RTL8367C_FAMILY << 4) + 2;
 
 static struct rtl8366_mib_counter
 rtl8367b_mib_counters[RTL8367B_NUM_MIB_COUNTERS] = {
@@ -639,7 +652,10 @@ static int rtl8367b_read_phy_reg(struct rtl8366_smi *smi,
 	u32 data;
 	int err;
 
-	if (phy_addr > RTL8367B_PHY_ADDR_MAX)
+	if (smi->chip == CHIP_RTL8365MB_VC) {
+		if (phy_addr > RTL8365MB_PHY_ADDR_MAX)
+			return -EINVAL;
+	} else if (phy_addr > RTL8367B_PHY_ADDR_MAX)
 		return -EINVAL;
 
 	if (phy_reg > RTL8367B_PHY_REG_MAX)
@@ -689,7 +705,10 @@ static int rtl8367b_write_phy_reg(struct rtl8366_smi *smi,
 	dev_dbg(smi->parent, "phy_write: addr:%02x, reg:%02x, val:%04x\n",
 		phy_addr, phy_reg, val);
 
-	if (phy_addr > RTL8367B_PHY_ADDR_MAX)
+	if (smi->chip == CHIP_RTL8365MB_VC) {
+		if (phy_addr > RTL8365MB_PHY_ADDR_MAX)
+			return -EINVAL;
+	} else if (phy_addr > RTL8367B_PHY_ADDR_MAX)
 		return -EINVAL;
 
 	if (phy_reg > RTL8367B_PHY_REG_MAX)
@@ -740,7 +759,7 @@ static int rtl8367b_init_regs(struct rtl8366_smi *smi)
 	REG_RD(smi, RTL8367B_CHIP_NUMBER_REG, &chip_num);
 	REG_RD(smi, RTL8367B_CHIP_VER_REG, &chip_ver);
 
-	if ((chip_ver ==  0x0020 || chip_ver == 0x00A0) && chip_num == 0x6367)  {
+	if ((chip_ver ==  0x0020 || chip_ver ==  0x0040 || chip_ver == 0x00A0) && chip_num == 0x6367)  {
 		initvals = rtl8367c_initvals;
 		count = ARRAY_SIZE(rtl8367c_initvals);
 	} else {
@@ -1560,18 +1579,30 @@ static int rtl8367b_detect(struct rtl8366_smi *smi)
 
 	switch (chip_ver) {
 	case 0x0020:
-		if (chip_num == 0x6367)
+		if (chip_num == 0x6367) {
 			chip_name = "8367RB-VB";
+			smi->chip = CHIP_RTL8367RB_VB;
+		}
+		break;
+	case 0x0040:
+		if (chip_num == 0x6367) {
+			chip_name = "8365MB-VC";
+			smi->chip = CHIP_RTL8365MB_VC;
+		}
 		break;
 	case 0x00A0:
-		if (chip_num == 0x6367)
+		if (chip_num == 0x6367) {
 			chip_name = "8367S";
+			smi->chip = CHIP_RTL8367S;
+		}
 		break;
 	case 0x1000:
 		chip_name = "8367RB";
+		smi->chip = CHIP_RTL8367RB;
 		break;
 	case 0x1010:
 		chip_name = "8367R-VB";
+		smi->chip = CHIP_RTL8367R_VB;
 	}
 
 	if (!chip_name) {
