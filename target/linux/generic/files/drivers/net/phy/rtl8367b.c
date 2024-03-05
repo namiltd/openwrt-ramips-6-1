@@ -1,6 +1,7 @@
 /*
  * Platform driver for Realtek RTL8367B family chips, i.e. RTL8367R-VB and RTL8367RB
  * extended with support for RTL8367C family chips, i.e. RTL8367S, RTL8367RB-VB and RTL8365MB-VC
+ * extended with support for RTL8367D family chips, i.e. RTL8367S-VB
  *
  * Copyright (C) 2012 Gabor Juhos <juhosg@openwrt.org>
  *
@@ -269,8 +270,15 @@ struct rtl8367b_initval {
 
 #define RTL8365MB_PHY_ADDR_MAX	7
 
+#define RTL8367D_PORT_STATUS_REG(_p)		(0x12d0 + (_p))
+
+#define RTL8367D_VLAN_PVID_CTRL_REG(_p)		(0x0700 + (_p))
+#define RTL8367D_VLAN_PVID_CTRL_MASK		0xfff
+#define RTL8367D_VLAN_PVID_CTRL_SHIFT(_p)	0
+
 #define CHIP_FAMILY_RTL8367B	0
 #define CHIP_FAMILY_RTL8367C	1
+#define CHIP_FAMILY_RTL8367D	2
 
 #define CHIP_RTL8367R_VB		(CHIP_RTL8367B_FAMILY << 4) + 0;
 #define CHIP_RTL8367RB			(CHIP_RTL8367B_FAMILY << 4) + 1;
@@ -278,6 +286,8 @@ struct rtl8367b_initval {
 #define CHIP_RTL8367S			(CHIP_RTL8367C_FAMILY << 4) + 0;
 #define CHIP_RTL8367RB_VB		(CHIP_RTL8367C_FAMILY << 4) + 1;
 #define CHIP_RTL8365MB_VC		(CHIP_RTL8367C_FAMILY << 4) + 2;
+
+#define CHIP_RTL8367S_VB		(CHIP_RTL8367D_FAMILY << 4) + 0;
 
 static struct rtl8366_mib_counter
 rtl8367b_mib_counters[RTL8367B_NUM_MIB_COUNTERS] = {
@@ -759,7 +769,7 @@ static int rtl8367b_init_regs(struct rtl8366_smi *smi)
 	REG_RD(smi, RTL8367B_CHIP_NUMBER_REG, &chip_num);
 	REG_RD(smi, RTL8367B_CHIP_VER_REG, &chip_ver);
 
-	if ((chip_ver ==  0x0020 || chip_ver ==  0x0040 || chip_ver == 0x00A0) && chip_num == 0x6367)  {
+	if ((chip_ver ==  0x0010 && chip_num == 0x6642) || ((chip_ver ==  0x0020 || chip_ver ==  0x0040 || chip_ver == 0x00A0) && chip_num == 0x6367))  {
 		initvals = rtl8367c_initvals;
 		count = ARRAY_SIZE(rtl8367c_initvals);
 	} else {
@@ -1237,10 +1247,15 @@ static int rtl8367b_get_mc_index(struct rtl8366_smi *smi, int port, int *val)
 	if (port >= RTL8367B_NUM_PORTS)
 		return -EINVAL;
 
-	REG_RD(smi, RTL8367B_VLAN_PVID_CTRL_REG(port), &data);
-
-	*val = (data >> RTL8367B_VLAN_PVID_CTRL_SHIFT(port)) &
-	       RTL8367B_VLAN_PVID_CTRL_MASK;
+	if ((smi->chip >> 4) == CHIP_FAMILY_RTL8367D) {
+		REG_RD(smi, RTL8367D_VLAN_PVID_CTRL_REG(port), &data);
+		*val = (data >> RTL8367D_VLAN_PVID_CTRL_SHIFT(port)) &
+			RTL8367D_VLAN_PVID_CTRL_MASK;
+	} else {
+		REG_RD(smi, RTL8367B_VLAN_PVID_CTRL_REG(port), &data);
+		*val = (data >> RTL8367B_VLAN_PVID_CTRL_SHIFT(port)) &
+			RTL8367B_VLAN_PVID_CTRL_MASK;
+	}
 
 	return 0;
 }
@@ -1250,11 +1265,19 @@ static int rtl8367b_set_mc_index(struct rtl8366_smi *smi, int port, int index)
 	if (port >= RTL8367B_NUM_PORTS || index >= RTL8367B_NUM_VLANS)
 		return -EINVAL;
 
-	return rtl8366_smi_rmwr(smi, RTL8367B_VLAN_PVID_CTRL_REG(port),
+	if ((smi->chip >> 4) == CHIP_FAMILY_RTL8367D) {
+		return rtl8366_smi_rmwr(smi, RTL8367D_VLAN_PVID_CTRL_REG(port),
+				RTL8367D_VLAN_PVID_CTRL_MASK <<
+					RTL8367D_VLAN_PVID_CTRL_SHIFT(port),
+				(index & RTL8367D_VLAN_PVID_CTRL_MASK) <<
+					RTL8367D_VLAN_PVID_CTRL_SHIFT(port));
+	} else {
+		return rtl8366_smi_rmwr(smi, RTL8367B_VLAN_PVID_CTRL_REG(port),
 				RTL8367B_VLAN_PVID_CTRL_MASK <<
 					RTL8367B_VLAN_PVID_CTRL_SHIFT(port),
 				(index & RTL8367B_VLAN_PVID_CTRL_MASK) <<
 					RTL8367B_VLAN_PVID_CTRL_SHIFT(port));
+	}
 }
 
 static int rtl8367b_enable_vlan(struct rtl8366_smi *smi, int enable)
@@ -1313,7 +1336,10 @@ static int rtl8367b_sw_get_port_link(struct switch_dev *dev,
 	if (port >= RTL8367B_NUM_PORTS)
 		return -EINVAL;
 
-	rtl8366_smi_read_reg(smi, RTL8367B_PORT_STATUS_REG(port), &data);
+	if ((smi->chip >> 4) == CHIP_FAMILY_RTL8367D) 
+		rtl8366_smi_read_reg(smi, RTL8367D_PORT_STATUS_REG(port), &data);
+	else
+		rtl8366_smi_read_reg(smi, RTL8367B_PORT_STATUS_REG(port), &data);
 
 	link->link = !!(data & RTL8367B_PORT_STATUS_LINK);
 	if (!link->link)
@@ -1578,6 +1604,12 @@ static int rtl8367b_detect(struct rtl8366_smi *smi)
 	}
 
 	switch (chip_ver) {
+	case 0x0010:
+		if (chip_num == 0x6642) {
+			chip_name = "8367S-VB";
+			smi->chip = CHIP_RTL8367S_VB;
+		}
+		break;
 	case 0x0020:
 		if (chip_num == 0x6367) {
 			chip_name = "8367RB-VB";
