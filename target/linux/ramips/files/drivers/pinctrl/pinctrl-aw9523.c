@@ -810,7 +810,11 @@ static int aw9523_init_gpiochip(struct aw9523 *awi, unsigned int npins)
 	gpiochip->set_multiple = aw9523_gpio_set_multiple;
 	gpiochip->set_config = gpiochip_generic_config;
 	gpiochip->parent = dev;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+	gpiochip->fwnode = dev->fwnode;
+#else
 	gpiochip->of_node = dev->of_node;
+#endif
 	gpiochip->owner = THIS_MODULE;
 	gpiochip->can_sleep = true;
 
@@ -1069,6 +1073,13 @@ err_disable_vregs:
 	return ret;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int aw9523_probe_new(struct i2c_client *client)
+{
+	return aw9523_probe(client, NULL);
+}
+#endif
+
 static int aw9523_remove(struct i2c_client *client)
 {
 	struct aw9523 *awi = i2c_get_clientdata(client);
@@ -1120,7 +1131,11 @@ static struct i2c_driver aw9523_driver = {
 		.name = "aw9523-pinctrl",
 		.of_match_table = of_aw9523_i2c_match,
 	},
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+	.probe = aw9523_probe_new,
+#else
 	.probe = aw9523_probe,
+#endif
 	#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 	.remove = aw9523_remove_void,
 	#else
