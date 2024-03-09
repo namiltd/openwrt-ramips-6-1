@@ -18,7 +18,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
  
  	/*
  	 * In order to reduce the possibility of kernel panic when failed to
-@@ -834,6 +833,7 @@ void __init setup_arch(char **cmdline_p)
+@@ -835,6 +834,7 @@ void __init setup_arch(char **cmdline_p)
  
  	cpu_cache_init();
  	paging_init();
