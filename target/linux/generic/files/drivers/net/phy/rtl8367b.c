@@ -1279,7 +1279,7 @@ static int rtl8367b_set_vlan_mc(struct rtl8366_smi *smi, u32 index,
 	    vlanmc->priority > RTL8367B_PRIORITYMAX ||
 	    vlanmc->member > RTL8367B_VLAN_MC0_MEMBER_MASK ||
 	    vlanmc->untag > RTL8367B_UNTAG_MASK ||
-	    vlanmc->fid > RTL8367B_FIDMAX)
+	    vlanmc->fid > (((smi->chip >> 4) == CHIP_FAMILY_RTL8367D) ? RTL8367D_FIDMAX : RTL8367B_FIDMAX))
 		return -EINVAL;
 
 	data[0] = (vlanmc->member & RTL8367B_VLAN_MC0_MEMBER_MASK) <<
