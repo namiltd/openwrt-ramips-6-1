@@ -34,7 +34,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
 +	u32 id;
 +
 +	if (phydev->is_c45) {
-+		if (phydev->c45_ids.device_ids[1])
++		if (phydev->c45_ids.device_ids[1] != 0xFFFFFFFF)
 +			return phydev->c45_ids.device_ids[1] == RTL_8221B_VB_CG;
 +	} else {
 +		if (phydev->phy_id)
