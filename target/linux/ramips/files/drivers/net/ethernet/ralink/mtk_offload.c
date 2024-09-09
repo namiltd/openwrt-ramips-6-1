@@ -149,7 +149,7 @@ int mtk_flow_offload(struct mtk_eth *eth,
 
 	if (otuple->l4proto != IPPROTO_TCP && otuple->l4proto != IPPROTO_UDP)
 		return -EINVAL;
-	
+
 	if (type == FLOW_OFFLOAD_DEL) {
 		flow = NULL;
 		synchronize_rcu();
