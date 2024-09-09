@@ -113,6 +113,10 @@
 	};
 };
 
+&gsw {
+	mediatek,ephy-disable;
+};
+
 &ehci {
 	status = "disabled";
 };
