@@ -519,6 +519,17 @@ endef
 
 $(eval $(call KernelPackage,crypto-hw-eip93))
 
+define KernelPackage/crypto-aescfb
+  TITLE:=AES cipher operations feedback mode
+  DEPENDS:=@LINUX_6_12
+  KCONFIG:=CONFIG_CRYPTO_LIB_AESCFB
+  FILES:=$(LINUX_DIR)/lib/crypto/libaescfb.ko
+  AUTOLOAD:=$(call AutoLoad,09,libaescfb)
+  $(call AddDepends/crypto)
+endef
+
+$(eval $(call KernelPackage,crypto-aescfb))
+
 define KernelPackage/crypto-kpp
   TITLE:=Key-agreement Protocol Primitives
   KCONFIG:=CONFIG_CRYPTO_KPP
