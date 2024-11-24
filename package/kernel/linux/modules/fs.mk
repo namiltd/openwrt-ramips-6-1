@@ -264,7 +264,7 @@ define KernelPackage/fs-fscache
   TITLE:=General filesystem local cache manager
   DEPENDS:=+kmod-fs-netfs
   KCONFIG:=\
-	CONFIG_FSCACHE \
+	CONFIG_FSCACHE=y \
 	CONFIG_FSCACHE_STATS=y \
 	CONFIG_FSCACHE_HISTOGRAM=n \
 	CONFIG_FSCACHE_DEBUG=n \
