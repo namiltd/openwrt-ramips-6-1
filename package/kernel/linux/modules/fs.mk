@@ -262,7 +262,7 @@ $(eval $(call KernelPackage,fs-f2fs))
 define KernelPackage/fs-fscache
   SUBMENU:=$(FS_MENU)
   TITLE:=General filesystem local cache manager
-  DEPENDS:=+kmod-fs-netfs
+  DEPENDS:=+kmod-fs-netfs @!LINUX_6_12
   KCONFIG:=\
 	CONFIG_FSCACHE \
 	CONFIG_FSCACHE_STATS=y \
